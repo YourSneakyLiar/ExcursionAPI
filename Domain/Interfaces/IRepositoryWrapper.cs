@@ -1,6 +1,7 @@
 ﻿using Domain.Models;
+using Domain.Interfaces;
 
-namespace Domain.Interfaces
+namespace Domain.Wrapper
 {
     public interface IRepositoryWrapper
     {

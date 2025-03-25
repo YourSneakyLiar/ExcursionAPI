@@ -1,7 +1,8 @@
 ﻿using Domain.Interfaces;
+using Domain.Interfacess;
 using Domain.Models;
+using Domain.Wrapper;
 using Microsoft.EntityFrameworkCore;
-using BusinessLogic.Interfaces;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 

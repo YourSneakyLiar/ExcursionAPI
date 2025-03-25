@@ -1,13 +1,14 @@
-using System.Reflection;
-using DataAccess.Models;
-using DataAccess.Wrapper;
-using BusinessLogic.Interfaces;
+using Domain.Interfaces;
 using BusinessLogic.Services;
+using Domain.Models;
+using DataAccess.Wrapper;
+using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions;
+using Domain.Wrapper;
 using Microsoft.OpenApi.Models;
-namespace ExcursionAPI
-{
+using System.Reflection;
+using Domain.Interfacess;
+
     public class Program
     {
         public static void Main(string[] args)
@@ -23,8 +24,8 @@ namespace ExcursionAPI
             builder.Services.AddScoped<IOrderService, OrderService>();
             builder.Services.AddScoped<IProviderServiceService, ProviderServiceService>();
             builder.Services.AddScoped<IReviewService, ReviewService>();
-            builder.Services.AddScoped<IRoleService, RoleService>();
-            builder.Services.AddScoped<IStatisticService, StatisticService>();
+            builder.Services.AddScoped<IRoleService, RoleService>();   
+            builder.Services.AddScoped<IStatisticService, StatisticService>();    
             builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
             builder.Services.AddScoped<ITourLoadStatisticService, TourLoadStatisticService>();
             builder.Services.AddScoped<ITourService, TourService>();
@@ -55,4 +56,4 @@ namespace ExcursionAPI
             app.Run();
         }
     }
-}
+

@@ -1,4 +1,5 @@
-﻿using Domain.Models;
+﻿using Domain.Interfacess;
+using Domain.Models;
 
 namespace Domain.Interfacess
 {
