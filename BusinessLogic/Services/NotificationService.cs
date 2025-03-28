@@ -1,55 +1,96 @@
 ﻿using Domain.Interfaces;
 using Domain.Models;
 using Domain.Wrapper;
-using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
+using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace BusinessLogic.Services
 {
     public class NotificationService : INotificationService
     {
-        private IRepositoryWrapper _repositoryWrapper;
+        private readonly IRepositoryWrapper _repositoryWrapper;
 
         public NotificationService(IRepositoryWrapper repositoryWrapper)
         {
-            _repositoryWrapper = repositoryWrapper;
+            _repositoryWrapper = repositoryWrapper ?? throw new ArgumentNullException(nameof(repositoryWrapper));
         }
 
-        public Task<List<Notification>> GetAll()
+        /// <summary>
+        /// Получает все уведомления.
+        /// </summary>
+        public async Task<List<Notification>> GetAll()
         {
-            return _repositoryWrapper.Notification.FindAll().ToListAsync();
+            return await _repositoryWrapper.Notification.FindAll();
         }
 
-        public Task<Notification> GetById(int id)
+        /// <summary>
+        /// Получает уведомление по ID.
+        /// </summary>
+        public async Task<Notification> GetById(int id)
         {
-            var notification = _repositoryWrapper.Notification
-                .FindByCondition(x => x.NotificationId == id).First();
-            return Task.FromResult(notification);
+            var notification = await _repositoryWrapper.Notification
+                .FindByCondition(x => x.NotificationId == id);
+
+            if (!notification.Any())
+            {
+                throw new KeyNotFoundException($"Notification with ID {id} not found.");
+            }
+
+            return notification.First();
         }
 
-        public Task Create(Notification model)
+        /// <summary>
+        /// Создает новое уведомление.
+        /// </summary>
+        public async Task Create(Notification model)
         {
-            _repositoryWrapper.Notification.Create(model);
+            if (model == null)
+            {
+                throw new ArgumentNullException(nameof(model), "Notification model cannot be null.");
+            }
+
+            await _repositoryWrapper.Notification.Create(model);
             _repositoryWrapper.Save();
-            return Task.CompletedTask;
         }
 
-        public Task Update(Notification model)
+        /// <summary>
+        /// Обновляет существующее уведомление.
+        /// </summary>
+        public async Task Update(Notification model)
         {
+            if (model == null)
+            {
+                throw new ArgumentNullException(nameof(model), "Notification model cannot be null.");
+            }
+
+            var existingNotification = await _repositoryWrapper.Notification
+                .FindByCondition(x => x.NotificationId == model.NotificationId);
+
+            if (!existingNotification.Any())
+            {
+                throw new KeyNotFoundException($"Notification with ID {model.NotificationId} not found.");
+            }
+
             _repositoryWrapper.Notification.Update(model);
             _repositoryWrapper.Save();
-            return Task.CompletedTask;
         }
 
-        public Task Delete(int id)
+        /// <summary>
+        /// Удаляет уведомление по ID.
+        /// </summary>
+        public async Task Delete(int id)
         {
-            var notification = _repositoryWrapper.Notification
-                .FindByCondition(x => x.NotificationId == id).First();
+            var notification = await _repositoryWrapper.Notification
+                .FindByCondition(x => x.NotificationId == id);
 
-            _repositoryWrapper.Notification.Delete(notification);
+            if (!notification.Any())
+            {
+                throw new KeyNotFoundException($"Notification with ID {id} not found.");
+            }
+
+            _repositoryWrapper.Notification.Delete(notification.First());
             _repositoryWrapper.Save();
-            return Task.CompletedTask;
         }
     }
 }

@@ -1,55 +1,96 @@
 ﻿using Domain.Interfaces;
 using Domain.Models;
 using Domain.Wrapper;
-using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
+using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace BusinessLogic.Services
 {
     public class ReviewService : IReviewService
     {
-        private IRepositoryWrapper _repositoryWrapper;
+        private readonly IRepositoryWrapper _repositoryWrapper;
 
         public ReviewService(IRepositoryWrapper repositoryWrapper)
         {
-            _repositoryWrapper = repositoryWrapper;
+            _repositoryWrapper = repositoryWrapper ?? throw new ArgumentNullException(nameof(repositoryWrapper));
         }
 
-        public Task<List<Review>> GetAll()
+        /// <summary>
+        /// Получает все отзывы.
+        /// </summary>
+        public async Task<List<Review>> GetAll()
         {
-            return _repositoryWrapper.Review.FindAll().ToListAsync();
+            return await _repositoryWrapper.Review.FindAll();
         }
 
-        public Task<Review> GetById(int id)
+        /// <summary>
+        /// Получает отзыв по ID.
+        /// </summary>
+        public async Task<Review> GetById(int id)
         {
-            var review = _repositoryWrapper.Review
-                .FindByCondition(x => x.ReviewId == id).First();
-            return Task.FromResult(review);
+            var review = await _repositoryWrapper.Review
+                .FindByCondition(x => x.ReviewId == id);
+
+            if (!review.Any())
+            {
+                throw new KeyNotFoundException($"Review with ID {id} not found.");
+            }
+
+            return review.First();
         }
 
-        public Task Create(Review model)
+        /// <summary>
+        /// Создает новый отзыв.
+        /// </summary>
+        public async Task Create(Review model)
         {
-            _repositoryWrapper.Review.Create(model);
+            if (model == null)
+            {
+                throw new ArgumentNullException(nameof(model), "Review model cannot be null.");
+            }
+
+            await _repositoryWrapper.Review.Create(model);
             _repositoryWrapper.Save();
-            return Task.CompletedTask;
         }
 
-        public Task Update(Review model)
+        /// <summary>
+        /// Обновляет существующий отзыв.
+        /// </summary>
+        public async Task Update(Review model)
         {
+            if (model == null)
+            {
+                throw new ArgumentNullException(nameof(model), "Review model cannot be null.");
+            }
+
+            var existingReview = await _repositoryWrapper.Review
+                .FindByCondition(x => x.ReviewId == model.ReviewId);
+
+            if (!existingReview.Any())
+            {
+                throw new KeyNotFoundException($"Review with ID {model.ReviewId} not found.");
+            }
+
             _repositoryWrapper.Review.Update(model);
             _repositoryWrapper.Save();
-            return Task.CompletedTask;
         }
 
-        public Task Delete(int id)
+        /// <summary>
+        /// Удаляет отзыв по ID.
+        /// </summary>
+        public async Task Delete(int id)
         {
-            var review = _repositoryWrapper.Review
-                .FindByCondition(x => x.ReviewId == id).First();
+            var review = await _repositoryWrapper.Review
+                .FindByCondition(x => x.ReviewId == id);
 
-            _repositoryWrapper.Review.Delete(review);
+            if (!review.Any())
+            {
+                throw new KeyNotFoundException($"Review with ID {id} not found.");
+            }
+
+            _repositoryWrapper.Review.Delete(review.First());
             _repositoryWrapper.Save();
-            return Task.CompletedTask;
         }
     }
 }

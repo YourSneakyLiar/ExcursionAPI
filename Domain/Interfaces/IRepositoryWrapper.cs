@@ -17,6 +17,6 @@ namespace Domain.Wrapper
         ITourLoadStatisticRepository TourLoadStatistic { get; }
         ITourRepository Tour { get; }
 
-        void Save();
+        Task Save();
     }
 }

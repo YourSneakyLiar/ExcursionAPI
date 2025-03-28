@@ -1,55 +1,96 @@
 ﻿using Domain.Interfaces;
 using Domain.Models;
 using Domain.Wrapper;
-using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
+using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace BusinessLogic.Services
 {
     public class ProviderServiceService : IProviderServiceService
     {
-        private IRepositoryWrapper _repositoryWrapper;
+        private readonly IRepositoryWrapper _repositoryWrapper;
 
         public ProviderServiceService(IRepositoryWrapper repositoryWrapper)
         {
-            _repositoryWrapper = repositoryWrapper;
+            _repositoryWrapper = repositoryWrapper ?? throw new ArgumentNullException(nameof(repositoryWrapper));
         }
 
-        public Task<List<ProviderService>> GetAll()
+        /// <summary>
+        /// Получает все услуги провайдера.
+        /// </summary>
+        public async Task<List<ProviderService>> GetAll()
         {
-            return _repositoryWrapper.ProviderService.FindAll().ToListAsync();
+            return await _repositoryWrapper.ProviderService.FindAll();
         }
 
-        public Task<ProviderService> GetById(int id)
+        /// <summary>
+        /// Получает услугу провайдера по ID.
+        /// </summary>
+        public async Task<ProviderService> GetById(int id)
         {
-            var providerService = _repositoryWrapper.ProviderService
-                .FindByCondition(x => x.ServiceId == id).First();
-            return Task.FromResult(providerService);
+            var providerService = await _repositoryWrapper.ProviderService
+                .FindByCondition(x => x.ServiceId == id);
+
+            if (!providerService.Any())
+            {
+                throw new KeyNotFoundException($"Provider service with ID {id} not found.");
+            }
+
+            return providerService.First();
         }
 
-        public Task Create(ProviderService model)
+        /// <summary>
+        /// Создает новую услугу провайдера.
+        /// </summary>
+        public async Task Create(ProviderService model)
         {
-            _repositoryWrapper.ProviderService.Create(model);
+            if (model == null)
+            {
+                throw new ArgumentNullException(nameof(model), "Provider service model cannot be null.");
+            }
+
+            await _repositoryWrapper.ProviderService.Create(model);
             _repositoryWrapper.Save();
-            return Task.CompletedTask;
         }
 
-        public Task Update(ProviderService model)
+        /// <summary>
+        /// Обновляет существующую услугу провайдера.
+        /// </summary>
+        public async Task Update(ProviderService model)
         {
+            if (model == null)
+            {
+                throw new ArgumentNullException(nameof(model), "Provider service model cannot be null.");
+            }
+
+            var existingProviderService = await _repositoryWrapper.ProviderService
+                .FindByCondition(x => x.ServiceId == model.ServiceId);
+
+            if (!existingProviderService.Any())
+            {
+                throw new KeyNotFoundException($"Provider service with ID {model.ServiceId} not found.");
+            }
+
             _repositoryWrapper.ProviderService.Update(model);
             _repositoryWrapper.Save();
-            return Task.CompletedTask;
         }
 
-        public Task Delete(int id)
+        /// <summary>
+        /// Удаляет услугу провайдера по ID.
+        /// </summary>
+        public async Task Delete(int id)
         {
-            var providerService = _repositoryWrapper.ProviderService
-                .FindByCondition(x => x.ServiceId == id).First();
+            var providerService = await _repositoryWrapper.ProviderService
+                .FindByCondition(x => x.ServiceId == id);
 
-            _repositoryWrapper.ProviderService.Delete(providerService);
+            if (!providerService.Any())
+            {
+                throw new KeyNotFoundException($"Provider service with ID {id} not found.");
+            }
+
+            _repositoryWrapper.ProviderService.Delete(providerService.First());
             _repositoryWrapper.Save();
-            return Task.CompletedTask;
         }
     }
 }

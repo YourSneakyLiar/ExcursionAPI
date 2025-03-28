@@ -2,55 +2,65 @@
 using Domain.Interfacess;
 using Domain.Models;
 using Domain.Wrapper;
-using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace BusinessLogic.Services
 {
     public class StatisticService : IStatisticService
     {
-        private IRepositoryWrapper _repositoryWrapper;
+        private readonly IRepositoryWrapper _repositoryWrapper;
 
         public StatisticService(IRepositoryWrapper repositoryWrapper)
         {
             _repositoryWrapper = repositoryWrapper;
         }
 
-        public Task<List<Statistic>> GetAll()
+        /// <summary>
+        /// Получает всю статистику.
+        /// </summary>
+        public async Task<List<Statistic>> GetAll()
         {
-            return _repositoryWrapper.Statistic.FindAll().ToListAsync();
+            return await _repositoryWrapper.Statistic.FindAll();
         }
 
-        public Task<Statistic> GetById(int id)
+        /// <summary>
+        /// Получает статистику по ID.
+        /// </summary>
+        public async Task<Statistic> GetById(int id)
         {
-            var statistic = _repositoryWrapper.Statistic
-                .FindByCondition(x => x.StatisticId == id).First();
-            return Task.FromResult(statistic);
+            var statistic = await _repositoryWrapper.Statistic
+                .FindByCondition(x => x.StatisticId == id);
+
+            return statistic.First();
         }
 
-        public Task Create(Statistic model)
+        /// <summary>
+        /// Создает новую запись статистики.
+        /// </summary>
+        public async Task Create(Statistic model)
         {
-            _repositoryWrapper.Statistic.Create(model);
+            await _repositoryWrapper.Statistic.Create(model);
             _repositoryWrapper.Save();
-            return Task.CompletedTask;
         }
 
-        public Task Update(Statistic model)
+        /// <summary>
+        /// Обновляет существующую запись статистики.
+        /// </summary>
+        public async Task Update(Statistic model)
         {
             _repositoryWrapper.Statistic.Update(model);
             _repositoryWrapper.Save();
-            return Task.CompletedTask;
         }
 
-        public Task Delete(int id)
+        /// <summary>
+        /// Удаляет запись статистики по ID.
+        /// </summary>
+        public async Task Delete(int id)
         {
-            var statistic = _repositoryWrapper.Statistic
-                .FindByCondition(x => x.StatisticId == id).First();
+            var statistic = await _repositoryWrapper.Statistic
+                .FindByCondition(x => x.StatisticId == id);
 
-            _repositoryWrapper.Statistic.Delete(statistic);
+            _repositoryWrapper.Statistic.Delete(statistic.First());
             _repositoryWrapper.Save();
-            return Task.CompletedTask;
         }
     }
 }

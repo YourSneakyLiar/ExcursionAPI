@@ -1,55 +1,96 @@
 ﻿using Domain.Interfaces;
 using Domain.Models;
 using Domain.Wrapper;
-using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
+using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace BusinessLogic.Services
 {
     public class OrderService : IOrderService
     {
-        private IRepositoryWrapper _repositoryWrapper;
+        private readonly IRepositoryWrapper _repositoryWrapper;
 
         public OrderService(IRepositoryWrapper repositoryWrapper)
         {
-            _repositoryWrapper = repositoryWrapper;
+            _repositoryWrapper = repositoryWrapper ?? throw new ArgumentNullException(nameof(repositoryWrapper));
         }
 
-        public Task<List<Order>> GetAll()
+        /// <summary>
+        /// Получает все заказы.
+        /// </summary>
+        public async Task<List<Order>> GetAll()
         {
-            return _repositoryWrapper.Order.FindAll().ToListAsync();
+            return await _repositoryWrapper.Order.FindAll();
         }
 
-        public Task<Order> GetById(int id)
+        /// <summary>
+        /// Получает заказ по ID.
+        /// </summary>
+        public async Task<Order> GetById(int id)
         {
-            var order = _repositoryWrapper.Order
-                .FindByCondition(x => x.OrderId == id).First();
-            return Task.FromResult(order);
+            var order = await _repositoryWrapper.Order
+                .FindByCondition(x => x.OrderId == id);
+
+            if (!order.Any())
+            {
+                throw new KeyNotFoundException($"Order with ID {id} not found.");
+            }
+
+            return order.First();
         }
 
-        public Task Create(Order model)
+        /// <summary>
+        /// Создает новый заказ.
+        /// </summary>
+        public async Task Create(Order model)
         {
-            _repositoryWrapper.Order.Create(model);
+            if (model == null)
+            {
+                throw new ArgumentNullException(nameof(model), "Order model cannot be null.");
+            }
+
+            await _repositoryWrapper.Order.Create(model);
             _repositoryWrapper.Save();
-            return Task.CompletedTask;
         }
 
-        public Task Update(Order model)
+        /// <summary>
+        /// Обновляет существующий заказ.
+        /// </summary>
+        public async Task Update(Order model)
         {
+            if (model == null)
+            {
+                throw new ArgumentNullException(nameof(model), "Order model cannot be null.");
+            }
+
+            var existingOrder = await _repositoryWrapper.Order
+                .FindByCondition(x => x.OrderId == model.OrderId);
+
+            if (!existingOrder.Any())
+            {
+                throw new KeyNotFoundException($"Order with ID {model.OrderId} not found.");
+            }
+
             _repositoryWrapper.Order.Update(model);
             _repositoryWrapper.Save();
-            return Task.CompletedTask;
         }
 
-        public Task Delete(int id)
+        /// <summary>
+        /// Удаляет заказ по ID.
+        /// </summary>
+        public async Task Delete(int id)
         {
-            var order = _repositoryWrapper.Order
-                .FindByCondition(x => x.OrderId == id).First();
+            var order = await _repositoryWrapper.Order
+                .FindByCondition(x => x.OrderId == id);
 
-            _repositoryWrapper.Order.Delete(order);
+            if (!order.Any())
+            {
+                throw new KeyNotFoundException($"Order with ID {id} not found.");
+            }
+
+            _repositoryWrapper.Order.Delete(order.First());
             _repositoryWrapper.Save();
-            return Task.CompletedTask;
         }
     }
 }

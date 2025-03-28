@@ -1,55 +1,66 @@
 ﻿using Domain.Interfaces;
+using Domain.Interfacess;
 using Domain.Models;
 using Domain.Wrapper;
-using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace BusinessLogic.Services
 {
-    public class SubscriptionService : ISubscriptionService
+    public class StatisticService : IStatisticService
     {
-        private IRepositoryWrapper _repositoryWrapper;
+        private readonly IRepositoryWrapper _repositoryWrapper;
 
-        public SubscriptionService(IRepositoryWrapper repositoryWrapper)
+        public StatisticService(IRepositoryWrapper repositoryWrapper)
         {
             _repositoryWrapper = repositoryWrapper;
         }
 
-        public Task<List<Subscription>> GetAll()
+        /// <summary>
+        /// Получает всю статистику.
+        /// </summary>
+        public async Task<List<Statistic>> GetAll()
         {
-            return _repositoryWrapper.Subscription.FindAll().ToListAsync();
+            return await _repositoryWrapper.Statistic.FindAll();
         }
 
-        public Task<Subscription> GetById(int id)
+        /// <summary>
+        /// Получает статистику по ID.
+        /// </summary>
+        public async Task<Statistic> GetById(int id)
         {
-            var subscription = _repositoryWrapper.Subscription
-                .FindByCondition(x => x.SubscriptionId == id).First();
-            return Task.FromResult(subscription);
+            var statistic = await _repositoryWrapper.Statistic
+                .FindByCondition(x => x.StatisticId == id);
+
+            return statistic.First();
         }
 
-        public Task Create(Subscription model)
+        /// <summary>
+        /// Создает новую запись статистики.
+        /// </summary>
+        public async Task Create(Statistic model)
         {
-            _repositoryWrapper.Subscription.Create(model);
+            await _repositoryWrapper.Statistic.Create(model);
             _repositoryWrapper.Save();
-            return Task.CompletedTask;
         }
 
-        public Task Update(Subscription model)
+        /// <summary>
+        /// Обновляет существующую запись статистики.
+        /// </summary>
+        public async Task Update(Statistic model)
         {
-            _repositoryWrapper.Subscription.Update(model);
+            _repositoryWrapper.Statistic.Update(model);
             _repositoryWrapper.Save();
-            return Task.CompletedTask;
         }
 
-        public Task Delete(int id)
+        /// <summary>
+        /// Удаляет запись статистики по ID.
+        /// </summary>
+        public async Task Delete(int id)
         {
-            var subscription = _repositoryWrapper.Subscription
-                .FindByCondition(x => x.SubscriptionId == id).First();
+            var statistic = await _repositoryWrapper.Statistic
+                .FindByCondition(x => x.StatisticId == id);
 
-            _repositoryWrapper.Subscription.Delete(subscription);
+            _repositoryWrapper.Statistic.Delete(statistic.First());
             _repositoryWrapper.Save();
-            return Task.CompletedTask;
         }
     }
 }

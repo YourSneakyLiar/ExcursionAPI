@@ -1,55 +1,65 @@
 ﻿using Domain.Interfaces;
 using Domain.Models;
 using Domain.Wrapper;
-using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace BusinessLogic.Services
 {
     public class ComplaintService : IComplaintService
     {
-        private IRepositoryWrapper _repositoryWrapper;
+        private readonly IRepositoryWrapper _repositoryWrapper;
 
         public ComplaintService(IRepositoryWrapper repositoryWrapper)
         {
             _repositoryWrapper = repositoryWrapper;
         }
 
-        public Task<List<Complaint>> GetAll()
+        /// <summary>
+        /// Получает все жалобы.
+        /// </summary>
+        public async Task<List<Complaint>> GetAll()
         {
-            return _repositoryWrapper.Complaint.FindAll().ToListAsync();
+            return await _repositoryWrapper.Complaint.FindAll();
         }
 
-        public Task<Complaint> GetById(int id)
+        /// <summary>
+        /// Получает жалобу по ID.
+        /// </summary>
+        public async Task<Complaint> GetById(int id)
         {
-            var complaint = _repositoryWrapper.Complaint
-                .FindByCondition(x => x.ComplaintId == id).First();
-            return Task.FromResult(complaint);
+            var complaint = await _repositoryWrapper.Complaint
+                .FindByCondition(x => x.ComplaintId == id);
+
+            return complaint.First();
         }
 
-        public Task Create(Complaint model)
+        /// <summary>
+        /// Создает новую жалобу.
+        /// </summary>
+        public async Task Create(Complaint model)
         {
-            _repositoryWrapper.Complaint.Create(model);
+            await _repositoryWrapper.Complaint.Create(model);
             _repositoryWrapper.Save();
-            return Task.CompletedTask;
         }
 
-        public Task Update(Complaint model)
+        /// <summary>
+        /// Обновляет существующую жалобу.
+        /// </summary>
+        public async Task Update(Complaint model)
         {
             _repositoryWrapper.Complaint.Update(model);
             _repositoryWrapper.Save();
-            return Task.CompletedTask;
         }
 
-        public Task Delete(int id)
+        /// <summary>
+        /// Удаляет жалобу по ID.
+        /// </summary>
+        public async Task Delete(int id)
         {
-            var complaint = _repositoryWrapper.Complaint
-                .FindByCondition(x => x.ComplaintId == id).First();
+            var complaint = await _repositoryWrapper.Complaint
+                .FindByCondition(x => x.ComplaintId == id);
 
-            _repositoryWrapper.Complaint.Delete(complaint);
+            _repositoryWrapper.Complaint.Delete(complaint.First());
             _repositoryWrapper.Save();
-            return Task.CompletedTask;
         }
     }
 }

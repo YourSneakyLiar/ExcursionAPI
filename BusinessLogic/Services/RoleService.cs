@@ -1,55 +1,96 @@
 ﻿using Domain.Interfaces;
 using Domain.Models;
 using Domain.Wrapper;
-using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
+using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace BusinessLogic.Services
 {
     public class RoleService : IRoleService
     {
-        private IRepositoryWrapper _repositoryWrapper;
+        private readonly IRepositoryWrapper _repositoryWrapper;
 
         public RoleService(IRepositoryWrapper repositoryWrapper)
         {
-            _repositoryWrapper = repositoryWrapper;
+            _repositoryWrapper = repositoryWrapper ?? throw new ArgumentNullException(nameof(repositoryWrapper));
         }
 
-        public Task<List<Role>> GetAll()
+        /// <summary>
+        /// Получает все роли.
+        /// </summary>
+        public async Task<List<Role>> GetAll()
         {
-            return _repositoryWrapper.Role.FindAll().ToListAsync();
+            return await _repositoryWrapper.Role.FindAll();
         }
 
-        public Task<Role> GetById(int id)
+        /// <summary>
+        /// Получает роль по ID.
+        /// </summary>
+        public async Task<Role> GetById(int id)
         {
-            var role = _repositoryWrapper.Role
-                .FindByCondition(x => x.RoleId == id).First();
-            return Task.FromResult(role);
+            var role = await _repositoryWrapper.Role
+                .FindByCondition(x => x.RoleId == id);
+
+            if (!role.Any())
+            {
+                throw new KeyNotFoundException($"Role with ID {id} not found.");
+            }
+
+            return role.First();
         }
 
-        public Task Create(Role model)
+        /// <summary>
+        /// Создает новую роль.
+        /// </summary>
+        public async Task Create(Role model)
         {
-            _repositoryWrapper.Role.Create(model);
+            if (model == null)
+            {
+                throw new ArgumentNullException(nameof(model), "Role model cannot be null.");
+            }
+
+            await _repositoryWrapper.Role.Create(model);
             _repositoryWrapper.Save();
-            return Task.CompletedTask;
         }
 
-        public Task Update(Role model)
+        /// <summary>
+        /// Обновляет существующую роль.
+        /// </summary>
+        public async Task Update(Role model)
         {
+            if (model == null)
+            {
+                throw new ArgumentNullException(nameof(model), "Role model cannot be null.");
+            }
+
+            var existingRole = await _repositoryWrapper.Role
+                .FindByCondition(x => x.RoleId == model.RoleId);
+
+            if (!existingRole.Any())
+            {
+                throw new KeyNotFoundException($"Role with ID {model.RoleId} not found.");
+            }
+
             _repositoryWrapper.Role.Update(model);
             _repositoryWrapper.Save();
-            return Task.CompletedTask;
         }
 
-        public Task Delete(int id)
+        /// <summary>
+        /// Удаляет роль по ID.
+        /// </summary>
+        public async Task Delete(int id)
         {
-            var role = _repositoryWrapper.Role
-                .FindByCondition(x => x.RoleId == id).First();
+            var role = await _repositoryWrapper.Role
+                .FindByCondition(x => x.RoleId == id);
 
-            _repositoryWrapper.Role.Delete(role);
+            if (!role.Any())
+            {
+                throw new KeyNotFoundException($"Role with ID {id} not found.");
+            }
+
+            _repositoryWrapper.Role.Delete(role.First());
             _repositoryWrapper.Save();
-            return Task.CompletedTask;
         }
     }
 }
